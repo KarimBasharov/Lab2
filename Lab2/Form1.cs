@@ -15,6 +15,7 @@ namespace Lab2
     public partial class Form1 : Form
     {
         bool drawing;
+        int historyCounter;
         GraphicsPath currentPath;
         Point oldLocation;
         Pen currentPen;
@@ -28,6 +29,7 @@ namespace Lab2
             currentPen = new Pen(Color.Black);
             currentPen.Width = trackBar1.Value;
             History = new List<Image>();
+
         }
 
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
@@ -36,9 +38,9 @@ namespace Lab2
             {
                 drawing = true;
                 oldLocation = e.Location;
-                currentPen = new Pen(Color.White);
-                historyColor = Color.Black;
                 currentPath = new GraphicsPath();
+                Console.WriteLine(historyColor);
+                currentPen.Color = System.Drawing.Color.White;
             }
             if(pictureBox1.Image == null)
             {
@@ -50,16 +52,13 @@ namespace Lab2
                 drawing = true;
                 oldLocation = e.Location;
                 currentPath = new GraphicsPath();
+                historyColor = currentPen.Color;
             }
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            History.Clear();
-            historyCounter = 0;
-            Bitmap pic = new Bitmap(709, 377);
-            pictureBox1.Image = pic;
-            History.Add(new Bitmap(pictureBox1.Image));
+
             if (pictureBox1.Image != null)
             {
                 var result = MessageBox.Show("Сохранить текущее изображение перед созданием нового рисунка?", "Предупреждение", MessageBoxButtons.YesNoCancel);
@@ -70,10 +69,24 @@ namespace Lab2
                     case DialogResult.Cancel: return;
                 }
             }
+
+            Bitmap pic = new Bitmap(709, 377);
+            pictureBox1.Image = pic;
+            pictureBox1.BackColor = Color.White;
+
+            Graphics g = Graphics.FromImage(pictureBox1.Image);
+            g.Clear(Color.White);
+            g.Dispose();
+            pictureBox1.Invalidate();
+
+            History.Clear();
+            historyCounter = 0;
+            History.Add(new Bitmap(pictureBox1.Image));
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+
             SaveFileDialog SaveDlg = new SaveFileDialog();
             SaveDlg.Filter = "JPEG Image|*.jpg|Bitmap Image|*.bmp|GIF Image|*.gif|PNG Image|*.png";
             SaveDlg.Title = "Save an Image File";
@@ -101,7 +114,6 @@ namespace Lab2
                         this.pictureBox1.Image.Save(fs, ImageFormat.Png);
                         break;
                 }
-
                 fs.Close();
             }
         }
@@ -127,8 +139,6 @@ namespace Lab2
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            Bitmap pic = new Bitmap(709, 377);
-            pictureBox1.Image = pic;
             if (pictureBox1.Image != null)
             {
                 var result = MessageBox.Show("Сохранить текущее изображение перед созданием нового рисунка?", "Предупреждение", MessageBoxButtons.YesNoCancel);
@@ -139,6 +149,19 @@ namespace Lab2
                     case DialogResult.Cancel: return;
                 }
             }
+
+            Bitmap pic = new Bitmap(709, 377);
+            pictureBox1.Image = pic;
+            pictureBox1.BackColor = Color.White;
+
+            Graphics g = Graphics.FromImage(pictureBox1.Image);
+            g.Clear(Color.White);
+            g.Dispose();
+            pictureBox1.Invalidate();
+
+            History.Clear();
+            historyCounter = 0;
+            History.Add(new Bitmap(pictureBox1.Image));
         }
 
         private void toolStripButton2_Click(object sender, EventArgs e)
@@ -195,10 +218,15 @@ namespace Lab2
 
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
-            History.RemoveRange(historyCounter + 1, History.Count - historyCounter - 1);
+            //History.RemoveRange(historyCounter + 1, History.Count - historyCounter - 1);
             History.Add(new Bitmap(pictureBox1.Image));
-            if (historyCounter + 1 < 10) historyCounter++;
-            if (History.Count - 1 == 10) History.RemoveAt(0);
+            historyCounter++;
+            if (historyCounter > 10)
+            {
+                History.RemoveAt(0);
+                historyCounter--;
+            }
+            //if (History.Count - 1 == 10) History.RemoveAt(0);
 
 
 
@@ -242,11 +270,16 @@ namespace Lab2
 
         private void renToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (historyCounter < History.Count - 1)
+            if (++historyCounter < History.Count)
             {
+                historyCounter--;
                 pictureBox1.Image = new Bitmap(History[++historyCounter]);
+                //pictureBox1.Image = new Bitmap(History[++historyCounter]);
             }
-            else MessageBox.Show("История пуста");
+            else 
+            { 
+                MessageBox.Show("История пуста"); 
+            }
         }
 
         private void solidToolStripMenuItem_Click(object sender, EventArgs e)
@@ -256,9 +289,30 @@ namespace Lab2
             solidToolStripMenuItem.Checked = true;
             dotToolStripMenuItem.Checked = false;
             dashDotDotToolStripMenuItem.Checked = false;
-            /*solidStyleMenu.Checked = true;
-            dotStyleMenu.Checked = false;
-            dashDotDotStyleMenu.Checked = false;*/
+        }
+
+        private void dotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            currentPen.DashStyle = DashStyle.Dot;
+
+            solidToolStripMenuItem.Checked = false;
+            dotToolStripMenuItem.Checked = true;
+            dashDotDotToolStripMenuItem.Checked = false;
+        }
+
+        private void dashDotDotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            currentPen.DashStyle = DashStyle.DashDotDot;
+
+            solidToolStripMenuItem.Checked = false;
+            dotToolStripMenuItem.Checked = false;
+            dashDotDotToolStripMenuItem.Checked = true;
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        {
+            Form2 form2 = new Form2();
+            form2.Show();
         }
     }
 }
